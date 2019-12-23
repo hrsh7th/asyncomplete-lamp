@@ -91,7 +91,7 @@ function! s:to_candidates(response) abort
     call add(l:candidates, {
           \   'word': word,
           \   'abbr': l:word . (l:is_expandable ? '~' : ''),
-          \   'kind': 'Snippet',
+          \   'kind': lamp#protocol#completion#get_kind_name(l:item.kind),
           \   'user_data': json_encode({
           \     'lamp': {
           \       'id': s:id,
