@@ -28,7 +28,7 @@ function! asyncomplete#sources#lamp#completor(opt, ctx)
 
   let l:should_request = v:false
   let l:should_request = l:should_request || index(s:get_chars(l:servers), l:before_char) >= 0
-  let l:should_request = l:should_request || strlen(matchstr(l:before_line, s:get_keyword_pattern() . '$')) == 1
+  let l:should_request = l:should_request || strlen(matchstr(l:before_line, s:get_keyword_pattern() . '$')) == 1 || !pumvisible()
   if !l:should_request
     return
   endif
@@ -133,7 +133,7 @@ function! s:get_keyword_pattern() abort
   let l:keywords = split(&iskeyword, ',')
   let l:keywords = filter(l:keywords, { _, k -> match(k, '\d\+-\d\+') == -1 })
   let l:keywords = filter(l:keywords, { _, k -> k !=# '@' })
-  let l:pattern = '\%(' . join(map(l:keywords, { _, v -> '\V' . escape(v, '\') . '\m' }), '\|') . '\|\w\|\d\)'
+  let l:pattern = '\%(' . join(map(l:keywords, { _, v -> '\V' . escape(v, '\') . '\m' }), '\|') . '\|\w\)*'
   return l:pattern
 endfunction
 
