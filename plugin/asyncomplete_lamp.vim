@@ -5,6 +5,7 @@ let g:loaded_asyncomplete_lamp = v:true
 
 augroup asyncomplete_lamp
   autocmd!
-  autocmd User lamp#text_document_did_open call asyncomplete#sources#lamp#attach()
+  autocmd User lamp#server#initialized call asyncomplete#sources#lamp#register()
+  autocmd User lamp#server#exited call asyncomplete#sources#lamp#unregister()
 augroup END
 

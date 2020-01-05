@@ -1,26 +1,28 @@
 let s:Promise = vital#lamp#import('Async.Promise')
-let s:initialized = {}
 
 "
-" asyncomplete#sources#lamp#attach
+" asyncomplete#sources#lamp#register
 "
-function! asyncomplete#sources#lamp#attach() abort
+function! asyncomplete#sources#lamp#register() abort
   let l:servers = s:get_servers()
   if empty(l:servers)
     return
   endif
 
-  if has_key(s:initialized, &filetype)
-    return
-  endif
-  let s:initialized[&filetype] = v:true
+  call asyncomplete#unregister_source(printf('lamp-%s', &filetype))
+  let l:source = {}
+  let l:source.name = printf('lamp-%s', &filetype)
+  let l:source.completor = function('s:completor')
+  let l:source.whitelist = [&filetype]
+  let l:source.triggers = { '*': s:get_chars(l:servers) }
+  call asyncomplete#register_source(l:source)
+endfunction
 
-  let l:opts = {}
-  let l:opts.name = printf('lamp-%s', &filetype)
-  let l:opts.completor = function('s:completor')
-  let l:opts.whitelist = [&filetype]
-  let l:opts.triggers = { '*': s:get_chars(l:servers) }
-  call asyncomplete#register_source(l:opts)
+"
+" asyncomplete#sources#lamp#unregister
+"
+function! asyncomplete#sources#lamp#unregister() abort
+  call asyncomplete#unregister_source(printf('lamp-%s', &filetype))
 endfunction
 
 "
