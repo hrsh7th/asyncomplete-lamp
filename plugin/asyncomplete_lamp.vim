@@ -5,8 +5,6 @@ let g:loaded_asyncomplete_lamp = v:true
 
 augroup asyncomplete_lamp
   autocmd!
-  autocmd User asyncomplete_setup call asyncomplete#register_source(
-        \   asyncomplete#sources#lamp#get_source_options({})
-        \ )
+  autocmd User lamp#text_document_did_open call asyncomplete#sources#lamp#attach()
 augroup END
 

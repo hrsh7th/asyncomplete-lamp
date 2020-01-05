@@ -1,22 +1,32 @@
 let s:Promise = vital#lamp#import('Async.Promise')
-let s:id = 0
+let s:initialized = {}
 
 "
-" asyncomplete#sources#lamp#get_source_options
+" asyncomplete#sources#lamp#attach
 "
-function! asyncomplete#sources#lamp#get_source_options(opt)
-  let l:defaults = {
-        \   'name': 'lamp',
-        \   'completor': function('asyncomplete#sources#lamp#completor'),
-        \   'whitelist': ['*']
-        \ }
-  return extend(l:defaults, a:opt)
+function! asyncomplete#sources#lamp#attach() abort
+  let l:servers = s:get_servers()
+  if empty(l:servers)
+    return
+  endif
+
+  if has_key(s:initialized, &filetype)
+    return
+  endif
+  let s:initialized[&filetype] = v:true
+
+  let l:opts = {}
+  let l:opts.name = printf('lamp-%s', &filetype)
+  let l:opts.completor = function('s:completor')
+  let l:opts.whitelist = [&filetype]
+  let l:opts.triggers = { '*': s:get_chars(l:servers) }
+  call asyncomplete#register_source(l:opts)
 endfunction
 
 "
-" asyncomplete#sources#lamp#completor
+" completor
 "
-function! asyncomplete#sources#lamp#completor(opt, ctx)
+function! s:completor(opt, ctx)
   " check servers.
   let l:servers = s:get_servers()
   if empty(l:servers)
@@ -60,7 +70,7 @@ function! s:on_responses(opt, ctx, responses) abort
     if empty(l:response)
       continue
     endif
-    let l:candidates += s:to_candidates(l:response)
+    let l:candidates += lamp#feature#completion#convert(l:response.server_name, l:response.response)
   endfor
 
   call asyncomplete#complete(
@@ -69,41 +79,6 @@ function! s:on_responses(opt, ctx, responses) abort
         \   a:ctx.col - strlen(matchstr(a:ctx.typed, s:get_keyword_pattern() . '$')),
         \   l:candidates
         \ )
-endfunction
-
-"
-" to_candidates
-"
-function! s:to_candidates(response) abort
-  let l:candidates = []
-  for l:item in (type(a:response.response) == type([]) ? a:response.response : get(a:response.response, 'items', []))
-    if get(l:item, 'insertTextFormat', 1) == 2 && has_key(l:item, 'insertText')
-      let l:word = l:item.label
-      let l:is_expandable = l:item.label !=# l:item.insertText
-    elseif has_key(l:item, 'textEdit')
-      let l:word = l:item.label
-      let l:is_expandable = l:item.label !=# l:item.textEdit.newText
-    else
-      let l:word = get(l:item, 'insertText', l:item.label)
-      let l:is_expandable = v:false
-    endif
-
-    call add(l:candidates, {
-          \   'word': word,
-          \   'abbr': l:word . (l:is_expandable ? '~' : ''),
-          \   'kind': lamp#protocol#completion#get_kind_name(l:item.kind),
-          \   'user_data': json_encode({
-          \     'lamp': {
-          \       'id': s:id,
-          \       'server_name': a:response.server_name,
-          \       'completion_item': l:item
-          \     }
-          \   })
-          \ })
-
-    let s:id += 1
-  endfor
-  return l:candidates
 endfunction
 
 "
