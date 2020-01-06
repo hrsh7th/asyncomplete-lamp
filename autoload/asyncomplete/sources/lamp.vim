@@ -40,7 +40,7 @@ function! s:completor(opt, ctx)
 
   let l:should_request = v:false
   let l:should_request = l:should_request || index(s:get_chars(l:servers), l:before_char) >= 0
-  let l:should_request = l:should_request || strlen(matchstr(l:before_line, s:get_keyword_pattern() . '$')) == 1 || !pumvisible()
+  let l:should_request = l:should_request || strlen(matchstr(l:before_line, s:get_keyword_pattern() . '$')) == 1
   if !l:should_request
     return
   endif
