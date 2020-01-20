@@ -75,11 +75,12 @@ function! s:on_responses(opt, ctx, responses) abort
     let l:candidates += lamp#feature#completion#convert(l:response.server_name, l:response.response)
   endfor
 
+  let l:before_line = lamp#view#cursor#get_before_line()
   call asyncomplete#complete(
         \   a:opt.name,
         \   a:ctx,
-        \   a:ctx.col - strlen(matchstr(a:ctx.typed, s:get_keyword_pattern() . '$')),
-        \   l:candidates
+        \   strlen(substitute(l:before_line, s:get_keyword_pattern() . '$', '', 'g')) + 1,
+        \   l:candidates,
         \ )
 endfunction
 
