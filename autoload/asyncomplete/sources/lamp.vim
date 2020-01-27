@@ -1,5 +1,30 @@
 let s:Promise = vital#lamp#import('Async.Promise')
 
+let s:state = {
+\   'is_inserted': v:false
+\ }
+
+augroup asyncomplete#sources#lamp
+  autocm!
+  autocmd InsertEnter * call s:on_insert_enter()
+  autocmd InsertCharPre * call s:on_insert_char_pre()
+augroup END
+
+"
+" s:on_insert_enter
+"
+function! s:on_insert_enter() abort
+  let s:state.is_inserted = v:false
+endfunction
+
+"
+" s:on_insert_char_pre
+"
+function! s:on_insert_char_pre() abort
+  let s:state.is_inserted = v:true
+endfunction
+
+
 "
 " asyncomplete#sources#lamp#register
 "
@@ -36,11 +61,18 @@ function! s:completor(opt, ctx)
   endif
 
   let l:before_line = lamp#view#cursor#get_before_line()
+  if s:state.is_inserted
+    let l:is_trigger_line = strlen(matchstr(l:before_line, s:get_keyword_pattern() . '$')) == 1
+  else
+    let l:is_trigger_line = strlen(matchstr(l:before_line, s:get_keyword_pattern() . '$')) >= 1
+  endif
+
   let l:before_char = lamp#view#cursor#get_before_char_skip_white()
+  let l:is_trigger_char = index(s:get_chars(l:servers), l:before_char) >= 0
 
   let l:should_request = v:false
-  let l:should_request = l:should_request || index(s:get_chars(l:servers), l:before_char) >= 0
-  let l:should_request = l:should_request || strlen(matchstr(l:before_line, s:get_keyword_pattern() . '$')) == 1
+  let l:should_request = l:should_request || l:is_trigger_char
+  let l:should_request = l:should_request || l:is_trigger_line
   if !l:should_request
     return
   endif
@@ -49,10 +81,6 @@ function! s:completor(opt, ctx)
         \   s.request('textDocument/completion', {
         \     'textDocument': lamp#protocol#document#identifier(bufnr('%')),
         \     'position': lamp#protocol#position#get(),
-        \     'context': {
-        \       'triggerKind': 2,
-        \       'triggerCharacter': l:before_char
-        \     }
         \   }).then({ response ->
         \     { 'server_name': s.name, 'response': response }
         \   }).catch(lamp#rescue({}))
