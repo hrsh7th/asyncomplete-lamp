@@ -81,6 +81,10 @@ function! s:completor(opt, ctx)
         \   s.request('textDocument/completion', {
         \     'textDocument': lamp#protocol#document#identifier(bufnr('%')),
         \     'position': lamp#protocol#position#get(),
+        \     'context': {
+        \       'triggerKind': 2,
+        \       'triggerCharacter': l:before_char
+        \     }
         \   }).then({ response ->
         \     { 'server_name': s.name, 'response': response }
         \   }).catch(lamp#rescue({}))
