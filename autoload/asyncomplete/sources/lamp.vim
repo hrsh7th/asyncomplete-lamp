@@ -1,4 +1,5 @@
 let s:Promise = vital#lamp#import('Async.Promise')
+let s:Position = vital#lamp#import('VS.LSP.Position')
 
 let s:state = {
 \   'is_inserted': v:false
@@ -80,7 +81,7 @@ function! s:completor(opt, ctx)
   let l:promises = map(l:servers, { _, s ->
         \   s.request('textDocument/completion', {
         \     'textDocument': lamp#protocol#document#identifier(bufnr('%')),
-        \     'position': lamp#protocol#position#get(),
+        \     'position': s:Position.cursor(),
         \     'context': {
         \       'triggerKind': 2,
         \       'triggerCharacter': l:before_char
