@@ -78,16 +78,21 @@ function! s:completor(opt, ctx)
     return
   endif
 
-  let l:promises = map(l:servers, { _, s ->
-        \   s.request('textDocument/completion', {
+  let l:position = s:Position.cursor()
+  let l:promises = map(l:servers, { _, server ->
+        \   server.request('textDocument/completion', {
         \     'textDocument': lamp#protocol#document#identifier(bufnr('%')),
-        \     'position': s:Position.cursor(),
+        \     'position': l:position,
         \     'context': {
         \       'triggerKind': 2,
         \       'triggerCharacter': l:before_char
         \     }
         \   }).then({ response ->
-        \     { 'server_name': s.name, 'response': response }
+        \     {
+        \       'server_name': server.name,
+        \       'position': l:position,
+        \       'response': response
+        \     }
         \   }).catch(lamp#rescue({}))
         \ })
 
@@ -105,7 +110,7 @@ function! s:on_responses(opt, ctx, responses) abort
     if empty(l:response)
       continue
     endif
-    let l:candidates += lamp#feature#completion#convert(l:response.server_name, l:response.response)
+    let l:candidates += lamp#feature#completion#convert(l:response.server_name, l:response.position, l:response.response)
   endfor
 
   let l:before_line = lamp#view#cursor#get_before_line()
